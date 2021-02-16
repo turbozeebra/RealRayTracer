@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
   glutInitContextVersion(2,0);
   glutInitDisplayMode(GLUT_RGBA|GLUT_ALPHA|GLUT_DOUBLE|GLUT_DEPTH);
   glutInitWindowSize(WIDTH, HEIGHT);
-  glutCreateWindow("My Second Triangle");
+  glutCreateWindow("Ray Tracing");
 
   GLenum glew_status = glewInit();
   if (glew_status != GLEW_OK) {
