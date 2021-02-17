@@ -64,26 +64,21 @@ struct ray_stack_t {
 ray_hit_t world_hit(vec3 C,vec3 D)
 {
     ray_hit_t rh; rh.t=invalid_t; rh.s.mirror=0.0; rh.opacity=1.0;
-    vec3 col1 = vec3(gl_FragColor.x / 600.0, (1 - (gl_FragCoord.y / 400.0)), 1.0);
-    vec3 col2 = vec3( 1,             (gl_FragCoord.y / 400.0), 1.0);
     
-    vec3 col4 = vec3( gl_FragCoord.x / 600.0,      0, 1.0);
-    // Red, Green and blue ball
-    vec3 col3 = vec3(0.66);
 
+    sphere_hit(rh,C,D, vec3(-0.3, 0.0, -1.0), 0.15,
+        surface_hit_t(0.4,vec3(1.0, 0.0, 0.0),0.0,1.0));
+    
+    sphere_hit(rh,C,D, vec3(0.0, 0.00, -1.5), 0.15,
+        surface_hit_t(0.2,vec3(0.8),1.0,1.0));
 
-    sphere_hit(rh,C,D,vec3(-0.0, 0.05, -0.5) , 0.1,
-        surface_hit_t(0.2,col3,0.0,-1.00)); 
+    sphere_hit(rh,C,D, vec3(0.3, 0.0, -1.0), 0.15,
+        surface_hit_t(0.4,vec3(0.0, 0.0, 1.0),0.0,1.0));
 
-    sphere_hit(rh,C,D, vec3(-0.17, 0.10, -1.0), 0.15,
-        surface_hit_t(0.02,col2,0.0,1.0));
-    sphere_hit(rh,C,D, vec3(0.17, 0.10, -1.0), 0.15,
-        surface_hit_t(0.2,col4,0.0,1.0));
-    //give it a little movement 
-    sphere_hit(rh,C,D, vec3(0.25*cos(u_Timer), 0.37, -1.0), 0.15,
-        surface_hit_t(0.4,col1,0.0,1.0));
-    sphere_hit(rh,C,D, vec3(0.0, -0.17, -1.0), 0.15,
-        surface_hit_t(0.9,vec3(0.6,0.4 ,0.8 ),0.0,1.0));
+    
+     sphere_hit(rh,C,D, vec3(0.0, -150.0, -1.0), 149.8,
+        surface_hit_t(0.4,vec3(0.0, 0.0, 1.0),0.0,1.0));
+
     
     return rh;
 }
@@ -92,7 +87,7 @@ ray_hit_t world_hit(vec3 C,vec3 D)
 //point at parameter = C + t*D
 vec3 calc_world_color(vec3 C,vec3 D) {
     //setup light 
-    vec3 lpos = normalize(vec3(-1.50, -1.0, 10.0)); // it needs to bounce if it wants to move
+    vec3 lpos = normalize(vec3(-1.50, 10.0, 10.0)); // it needs to bounce if it wants to move
     Light light = Light(lpos, vec3(0.2), vec3(0.5), vec3(1.0));
 
     float frac = 1.0; // fraction of object light that makes it to the camera 
@@ -153,16 +148,17 @@ vec3 calc_world_color(vec3 C,vec3 D) {
                 { // reflection/refraction 
 
                     // Mirror reflection first 
-                    float mirror = 0.08+0.92*pow(1.0-dot(-I,N),2.0); // fresnel 
+                    float mirror = 0.08+0.92*pow(1.0 - dot(-I, N), 2.0); // fresnel 
                     if (frontSide <= mirror) {
                         doReflect+=mirror;
                         frac*=(1.0-mirror); // all non-mirror light is refracted
                     }
 
-                    // refraction 
+                    // refraction snells law
                     vec3 R;
-                    float eta= 1.0 / rh.s.refract;
-                    float k = 1.0 - eta * eta * (1.0 - dot(N, I) * dot(N, I));
+                    float dt2 = dot(N, I) * dot(N, I);
+                    float eta = 1.0 / rh.s.refract; //air / glass intersection 
+                    float k = 1.0 - eta * eta * (1.0 - dt2); //discriminant
                     if (k < 0.0) {
                         doReflect+=1.0; // total internal reflection 
                     }
@@ -178,9 +174,9 @@ vec3 calc_world_color(vec3 C,vec3 D) {
                 } 
                 if (doReflect>0.0) { // pure mirror reflection 
                     stacktop++;
-                    stack[stacktop].frac=frac*doReflect;
-                    stack[stacktop].C=rh.P;
-                    stack[stacktop].D=reflect(I,N);
+                    stack[stacktop].frac = frac*doReflect;
+                    stack[stacktop].C = rh.P;
+                    stack[stacktop].D = reflect(I,N);
                 }
 
             }
@@ -220,4 +216,31 @@ void main(void) {
     
 	
 }
+
+
+
+/* 
+
+Scenes for world hit function
+
+vec3 col1 = vec3(gl_FragColor.x / 600.0, (1 - (gl_FragCoord.y / 400.0)), 1.0);
+    vec3 col2 = vec3( 1,             (gl_FragCoord.y / 400.0), 1.0);
+    
+    vec3 col4 = vec3( gl_FragCoord.x / 600.0,      0, 1.0);
+    // Red, Green and blue ball
+    vec3 col3 = vec3(0.6);
+
+sphere_hit(rh,C,D,vec3(-0.0, 0.05, -0.5) , 0.1,
+        surface_hit_t(0.2,col3,0.0, 1.40)); 
+
+    sphere_hit(rh,C,D, vec3(-0.17, 0.10, -1.0), 0.15,
+        surface_hit_t(0.02,col2,0.0,1.0));
+    sphere_hit(rh,C,D, vec3(0.17, 0.10, -1.0), 0.15,
+        surface_hit_t(0.2,col4,0.0,1.0));
+
+    sphere_hit(rh,C,D, vec3(0.0, 0.37, -1.0), 0.15,
+        surface_hit_t(0.4,col1,0.0,1.0));
+    sphere_hit(rh,C,D, vec3(0.0, -0.17, -1.0), 0.15,
+        surface_hit_t(0.9,vec3(0.6,0.4 ,0.8 ),0.0,1.0));
+*/
 

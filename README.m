@@ -17,6 +17,8 @@ Known issues:
 
 Development ideas:
 - Better camera (moving camera and a support for moving with WASD-keys and mouse)
+- take models to the openGL side of the program
+- make samplers
 - Implement particle simulation
 - Improve the shading model
-- Better dielectric 
+- Better dielectric material
