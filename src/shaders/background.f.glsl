@@ -70,14 +70,14 @@ ray_hit_t world_hit(vec3 C,vec3 D)
         surface_hit_t(0.4,vec3(1.0, 0.0, 0.0),0.0,1.0));
     
     sphere_hit(rh,C,D, vec3(0.0, 0.00, -1.5), 0.15,
-        surface_hit_t(0.2,vec3(0.8),1.0,1.0));
+        surface_hit_t(0.1,vec3(0.8),1.0,1.0));
 
     sphere_hit(rh,C,D, vec3(0.3, 0.0, -1.0), 0.15,
         surface_hit_t(0.4,vec3(0.0, 0.0, 1.0),0.0,1.0));
 
     
      sphere_hit(rh,C,D, vec3(0.0, -150.0, -1.0), 149.8,
-        surface_hit_t(0.4,vec3(0.0, 0.0, 1.0),0.0,1.0));
+        surface_hit_t(0.0,vec3(0.0, 0.0, 1.0),0.0,1.0));
 
     
     return rh;
