@@ -78,8 +78,6 @@ int init_resources()
 void onDisplay()
 {
   
-  
-  
   auto uNow = std::chrono::high_resolution_clock::now();
   std::chrono::duration<float> time = uNow - begin;
   float t = time.count();
