@@ -14,15 +14,8 @@
 #define WIDTH 600
 #define HEIGHT 400
 
-GLuint vbo_screen;
-GLuint program;
-GLint attribute_coord2d;
-std::chrono::_V2::system_clock::time_point begin = std::chrono::high_resolution_clock::now();
-
-int init_resources()
-{
-  // the idea is to make a square screen where the ray tracing happens
- GLfloat pixels[12] = {
+// the idea is to make a square screen where the ray tracing happens
+GLfloat pixels[12] = {
     -1.0, 1.0,
     1.0, 1.0,
     -1.0, -1.0,
@@ -32,25 +25,38 @@ int init_resources()
     -1.0, -1.0
 
   };
-  
+
+GLuint vbo_screen;
+GLuint MSAAframebuffer;
+GLuint textureColorBufferMultiSampled;
+GLuint screenTexture;
+GLuint program;
+GLint attribute_coord2d;
+
+std::chrono::_V2::system_clock::time_point begin = std::chrono::high_resolution_clock::now();
+
+int init_resources()
+{
+
   glGenBuffers(1, &vbo_screen);
   glBindBuffer(GL_ARRAY_BUFFER, vbo_screen);
   glBufferData(GL_ARRAY_BUFFER, sizeof(pixels), pixels, GL_STATIC_DRAW);
 
   GLint link_ok = GL_FALSE;
+  
   // Create raytracing shaders
   GLuint vs, fs;
   if ((vs = create_shader("src/shaders/background.v.glsl", GL_VERTEX_SHADER))   == 0) return 0;
   if ((fs = create_shader("src/shaders/background.f.glsl", GL_FRAGMENT_SHADER)) == 0) return 0;
-
   
-
-  //create a program
+  // create a program
   program = glCreateProgram();
-  //attach shaders to the program
+  
+  // attach shaders to the program
   glAttachShader(program, vs);
   glAttachShader(program, fs);
   
+  // link program object
   glLinkProgram(program);
   glGetProgramiv(program, GL_LINK_STATUS, &link_ok);
   if (!link_ok) {
@@ -72,18 +78,8 @@ int init_resources()
 void onDisplay()
 {
   
-  GLfloat pixels[12] = {
-    -1.0, 1.0,
-    1.0, 1.0,
-    -1.0, -1.0,
-
-    1.0, 1.0,
-    1.0, -1.0
-    -1.0, -1.0
-
-  };
   
-
+  
   auto uNow = std::chrono::high_resolution_clock::now();
   std::chrono::duration<float> time = uNow - begin;
   float t = time.count();
@@ -130,12 +126,15 @@ void timer(int)
   glutTimerFunc(fps, timer,0);
 }
 
-
 int main(int argc, char* argv[]) {
+
   glutInit(&argc, argv);
-  glutInitContextVersion(2,0);
-  glutInitDisplayMode(GLUT_RGBA|GLUT_ALPHA|GLUT_DOUBLE|GLUT_DEPTH);
+  glutInitDisplayMode(GLUT_RGBA|GLUT_ALPHA|GLUT_DOUBLE|GLUT_DEPTH|GLUT_MULTISAMPLE);
+  
+  glutInitContextVersion(3,0); // could be 4,2
+  glutSetOption(GLUT_MULTISAMPLE, 8);
   glutInitWindowSize(WIDTH, HEIGHT);
+
   glutCreateWindow("Ray Tracing");
 
   GLenum glew_status = glewInit();
@@ -143,16 +142,10 @@ int main(int argc, char* argv[]) {
     fprintf(stderr, "Error: %s\n", glewGetErrorString(glew_status));
     return 1;
   }
-
-  if (!GLEW_VERSION_2_0) {
-    fprintf(stderr, "Error: your graphic card does not support OpenGL 2.0\n");
-    return 1;
-  }
-
+  
   if (init_resources()) {
+   
     glutDisplayFunc(onDisplay);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glutTimerFunc(0,timer, 0);
     glutMainLoop();
   }
