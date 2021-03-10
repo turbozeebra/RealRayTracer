@@ -27,11 +27,6 @@ GLfloat pixels[12] = {
 
   };
 
-GLuint fbo_screen;
-GLuint rbo_RTC; //raytraces color
-GLuint fbo_msaa;
-GLuint rbo;
-GLuint texture;
 
 GLuint program;
 GLint attribute_coord2d;
@@ -42,7 +37,7 @@ std::chrono::_V2::system_clock::time_point begin = std::chrono::high_resolution_
 
 int init_resources()
 {
-  //generate texture object
+ 
   
   GLint link_ok = GL_FALSE; 
   // Create raytracing shaders
@@ -65,7 +60,7 @@ int init_resources()
     print_log(program);
     return 0;
   }
-  
+
   return 1;
 }
 
@@ -89,7 +84,7 @@ void onDisplay()
 void free_resources()
 {
   glDeleteProgram(program);
-  glDeleteBuffers(1, &fbo_screen);
+  //glDeleteBuffers(1, &fbo_screen);
 }
 
 
