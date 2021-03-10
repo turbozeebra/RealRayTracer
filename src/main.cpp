@@ -14,20 +14,6 @@
 #define WIDTH 600
 #define HEIGHT 400
 
-
-// the idea is to make a square screen where the ray tracing happens
-GLfloat pixels[12] = {
-    -1.0, 1.0,
-    1.0, 1.0,
-    -1.0, -1.0,
-
-    1.0, 1.0,
-    1.0, -1.0
-    -1.0, -1.0
-
-  };
-
-
 GLuint program;
 GLint attribute_coord2d;
 
