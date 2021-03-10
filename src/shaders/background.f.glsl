@@ -1,4 +1,5 @@
 
+layout (location = 0) out vec4 out_color1;
 uniform float u_Timer;
 
 const float invalid_t=1.0e9; // far away
@@ -66,7 +67,7 @@ ray_hit_t world_hit(vec3 C,vec3 D)
     ray_hit_t rh; rh.t=invalid_t; rh.s.mirror=0.0; rh.opacity=1.0;
     
 
-    sphere_hit(rh,C,D, vec3(-0.3, 0.0, -1.0), 0.15,
+    sphere_hit(rh,C,D, vec3(-0.2 * cos(u_Timer), 0.0, -1.0), 0.15,
         surface_hit_t(0.4,vec3(1.0, 0.0, 0.0),0.0,1.0));
     
     sphere_hit(rh,C,D, vec3(0.0, 0.00, -1.5), 0.15,
@@ -212,7 +213,8 @@ void main(void) {
    
 	vec3 col = calc_world_color(e, dir);
     
-	gl_FragColor = vec4(col, 1.0);
+	out_color1 = vec4(col, 1.0);
+    
     
 	
 }

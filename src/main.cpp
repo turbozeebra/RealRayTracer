@@ -14,6 +14,7 @@
 #define WIDTH 600
 #define HEIGHT 400
 
+
 // the idea is to make a square screen where the ray tracing happens
 GLfloat pixels[12] = {
     -1.0, 1.0,
@@ -26,24 +27,24 @@ GLfloat pixels[12] = {
 
   };
 
-GLuint vbo_screen;
-GLuint MSAAframebuffer;
-GLuint textureColorBufferMultiSampled;
-GLuint screenTexture;
+GLuint fbo_screen;
+GLuint rbo_RTC; //raytraces color
+GLuint fbo_msaa;
+GLuint rbo;
+GLuint texture;
+
 GLuint program;
 GLint attribute_coord2d;
+
+int msaalvl = 8;
 
 std::chrono::_V2::system_clock::time_point begin = std::chrono::high_resolution_clock::now();
 
 int init_resources()
 {
-
-  glGenBuffers(1, &vbo_screen);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo_screen);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(pixels), pixels, GL_STATIC_DRAW);
-
-  GLint link_ok = GL_FALSE;
+  //generate texture object
   
+  GLint link_ok = GL_FALSE; 
   // Create raytracing shaders
   GLuint vs, fs;
   if ((vs = create_shader("src/shaders/background.v.glsl", GL_VERTEX_SHADER))   == 0) return 0;
@@ -64,14 +65,7 @@ int init_resources()
     print_log(program);
     return 0;
   }
-
-  const char* attribute_name = "coord2d"; // 2d as two dimensions
-  attribute_coord2d = glGetAttribLocation(program, attribute_name);
-  if (attribute_coord2d == -1) {
-    fprintf(stderr, "Could not bind attribute %s\n", attribute_name);
-    return 0;
-  }
-
+  
   return 1;
 }
 
@@ -84,27 +78,9 @@ void onDisplay()
   //set uniforms
   int loc2 = glGetUniformLocation(program,"u_Timer");
   glUniform1f(loc2, t);
-
-  glClearColor(0.0, 0.0, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT);
-
   glUseProgram(program);
   glEnableVertexAttribArray(attribute_coord2d);
-  // Describe our vertices array to OpenGL (it can't guess its format automatically) 
-  glBindBuffer(GL_ARRAY_BUFFER, vbo_screen);
-  glVertexAttribPointer(
-    attribute_coord2d, // attribute
-    2,                 // number of elements per vertex, here (x,y)
-    GL_FLOAT,          // the type of each element
-    GL_FALSE,          // take our values as-is
-    0,                 // no extra data between each position
-    0                  // offset of first element
-  );
-
-  // Push each element in buffer_vertices to the vertex shader 
-  glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pixels), &pixels);
-  glDrawArrays(GL_TRIANGLE_STRIP, 0, 12);
-
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
   glDisableVertexAttribArray(attribute_coord2d);
   glutSwapBuffers();
   
@@ -113,7 +89,7 @@ void onDisplay()
 void free_resources()
 {
   glDeleteProgram(program);
-  glDeleteBuffers(1, &vbo_screen);
+  glDeleteBuffers(1, &fbo_screen);
 }
 
 
@@ -127,9 +103,8 @@ void timer(int)
 int main(int argc, char* argv[]) {
 
   glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_RGBA|GLUT_ALPHA|GLUT_DOUBLE|GLUT_DEPTH|GLUT_MULTISAMPLE);
   
-  glutInitContextVersion(3,0); // could be 4,2
+  glutInitDisplayMode(GLUT_RGBA|GLUT_ALPHA|GLUT_DOUBLE|GLUT_DEPTH|GLUT_MULTISAMPLE);
   glutSetOption(GLUT_MULTISAMPLE, 8);
   glutInitWindowSize(WIDTH, HEIGHT);
 
@@ -140,7 +115,20 @@ int main(int argc, char* argv[]) {
     fprintf(stderr, "Error: %s\n", glewGetErrorString(glew_status));
     return 1;
   }
-  
+  // things that are good to know 
+  const GLubyte* renderer = glGetString(GL_RENDERER); // get renderer string
+	const GLubyte* vendor = glGetString(GL_VENDOR); // vendor
+	const GLubyte* version = glGetString(GL_VERSION); // version as a string
+	const GLubyte* glslVersion = glGetString(GL_SHADING_LANGUAGE_VERSION); // glsl version string
+	GLint major, minor;
+	glGetIntegerv(GL_MAJOR_VERSION, &major); // get integer (only if gl version > 3)
+	glGetIntegerv(GL_MINOR_VERSION, &minor); // get dot integer (only if gl version > 3)
+	printf("OpenGL on %s %s\n", vendor, renderer);
+	printf("OpenGL version supported %s\n", version);
+	printf("GLSL version supported %s\n", glslVersion);
+	printf("Will now set GL to version %i.%i\n", major, minor);
+
+
   if (init_resources()) {
    
     glutDisplayFunc(onDisplay);
